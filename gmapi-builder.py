@@ -377,7 +377,8 @@ class IMGFile(object):
             if get_byte(self.f) != 1:
                 break
 
-            filename = get_nstr(self.f, 8)
+            #filename = get_nstr(self.f, 8)
+            filename = get_nstr(self.f, 8).strip()
             file_type = get_nstr(self.f, 3)
             size = get_uint(self.f)
 
@@ -434,6 +435,10 @@ def parse_options(option_list):
             help="the name of this mapset's TDB file")
     oparser.add_option("-b", "--baseimg", dest="baseimg",
             help="the name of the base img")
+    oparser.add_option("-i", "--mdx", dest="mdxfile",
+            help="the name of the mdx file")
+    oparser.add_option("-m", "--mdr", dest="mdrfile",
+            help="the name of the mdr file")
     oparser.add_option("-c", "--codepage", dest="codepage",
             help="codepage")
     oparser.add_option("-v", "--verbose", dest="verbosity",
@@ -511,6 +516,12 @@ def write_xml_file(tdbfile, options, output_dir, newTYPname):
     if tdbfile.header_block['Family ID'] > 0:
         write_field('ID', tdbfile.header_block['Family ID'], 1)
         f.write('\n')
+    if options.mdxfile:
+        write_field('IDX',os.path.basename(options.mdxfile), 1)
+        f.write('\n')
+    if options.mdrfile:
+        write_field('MDR', os.path.splitext(os.path.basename(options.mdrfile))[0], 1)
+        f.write('\n')
     if options.style:
         write_field('TYP', newTYPname, 1)
         f.write('\n')
@@ -553,12 +564,20 @@ if __name__ == '__main__':
             shutil.copy(options.tdbfile, os.path.join(imgoutput, os.path.basename(options.tdbfile).upper()))
             if options.style:
                 shutil.copy(options.style, os.path.join(output_dir, newTYPname))
+            if options.mdxfile:
+                shutil.copy(options.mdxfile, os.path.join(output_dir, os.path.basename(options.mdxfile)))
 
         for fn in filenames:
             imgfile = IMGFile(fn)
             imgfile.print_info()
             if not options.dryrun:
                 imgfile.dump(imgoutput)
+            imgfile.close()
+        if options.mdrfile:
+            imgfile = IMGFile(options.mdrfile)
+            imgfile.print_info()
+            if not options.dryrun:
+                imgfile.dump(output_dir)
             imgfile.close()
     except IOError:
             error_exit("Could not open '%s' for reading." % fn)
