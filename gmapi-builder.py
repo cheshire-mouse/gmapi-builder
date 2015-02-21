@@ -434,6 +434,8 @@ def parse_options(option_list):
             help="the name of this mapset's TDB file")
     oparser.add_option("-b", "--baseimg", dest="baseimg",
             help="the name of the base img")
+    oparser.add_option("-c", "--codepage", dest="codepage",
+            help="codepage")
     oparser.add_option("-v", "--verbose", dest="verbosity",
             action="count", help="verbosity")
     oparser.add_option("-s", "--style", dest="style",
@@ -470,7 +472,8 @@ def parse_options(option_list):
     return (options, args)
 
 def prepare_output_dir(tdbfile, options):
-    dir_prefix = tdbfile.header_block['Map Series']
+    #dir_prefix = tdbfile.header_block['Map Series']
+    dir_prefix = "FAMILY_" + str(tdbfile.header_block['Family ID'])
     if not os.path.isdir(options.output):
         error_exit('Output dir does not exist')
     gmapi = os.path.join(options.output, dir_prefix + '.gmapi')
@@ -494,7 +497,10 @@ def write_xml_file(tdbfile, options, output_dir, newTYPname):
     f = open(os.path.join(output_dir, 'Info.xml'), 'w')
     f.write('<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n')
     f.write('<MapProduct xmlns="http://www.garmin.com/xmlschemas/MapProduct/v1">\n\n')
-    write_field('Name', tdbfile.header_block['Map Family'], 1)
+    if options.codepage:
+        write_field('Name', tdbfile.header_block['Map Family'].decode(options.codepage).encode("utf8"), 1)
+    else:
+        write_field('Name', tdbfile.header_block['Map Family'], 1)
     f.write('\n')
     write_field('DataVersion', str(tdbfile.header_block['Product Major Version']) + ("%02d" % tdbfile.header_block['Product Minor Version']), 1)
     f.write('\n')
@@ -509,7 +515,10 @@ def write_xml_file(tdbfile, options, output_dir, newTYPname):
         write_field('TYP', newTYPname, 1)
         f.write('\n')
     f.write('    <SubProduct>\n')
-    write_field('Name', tdbfile.header_block['Map Series'], 2)
+    if options.codepage:
+        write_field('Name', tdbfile.header_block['Map Series'].decode(options.codepage).encode("utf8"), 2)
+    else:
+        write_field('Name', tdbfile.header_block['Map Series'], 2)
     write_field('ID', tdbfile.header_block['Product ID'], 2)
     baseimg = os.path.basename(options.baseimg)
     baseimg = baseimg[:baseimg.rfind('.')]
