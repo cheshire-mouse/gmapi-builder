@@ -50,6 +50,10 @@
 
     This program does the conversion.
 """
+"""
+    forked by gryphon
+    $Id$
+"""
 
 import logging
 import optparse
@@ -369,7 +373,8 @@ class IMGFile(object):
             # FAT starts at 0x600, each entry is
             # exactly 512 bytes, padded if necessary.
             self.f.seek(0x600 + file_count * 512)
-            if get_byte(self.f) == 0:
+            #if get_byte(self.f) == 0:
+            if get_byte(self.f) != 1:
                 break
 
             filename = get_nstr(self.f, 8)
